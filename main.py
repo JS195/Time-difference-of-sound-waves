@@ -1,5 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import random
+import pandas as pd
+import sklearn as sk
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
 
 def deltat(cp1, cs2, cp2):
   d = 100000
@@ -48,8 +53,6 @@ cp2 = 1960
 #lead = deltat(cp1, cs2, cp2)
 #plotter(lead)
 
-import random
-
 def noise(delta_t1):
     E = 1
     datasets = []
@@ -74,11 +77,6 @@ noisylead = noise(lead)
 #plot_datasets(noisybrass)
 #plot_datasets(noisyconcrete)
 #plot_datasets(noisylead)
-
-import pandas as pd
-import sklearn as sk
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
 
 df = (pd.DataFrame(np.array(noisysteel+noisybrass+noisyconcrete+noisylead))).dropna(axis=1)
 
