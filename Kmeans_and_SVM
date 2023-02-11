@@ -1,0 +1,47 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import pandas as pd
+import sklearn as sk
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+import random
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+from scipy import optimize
+from sklearn.metrics import accuracy_score
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import silhouette_score
+from sklearn import metrics
+from sklearn.svm import SVC
+
+df = (pd.DataFrame(np.array(noisysteel + noisybrass + noisyconcrete + noisylead))).dropna(axis=1)
+df['label'] = ''
+X = df.drop('label', axis=1)
+
+kmeans = KMeans(n_clusters=4)
+kmeans.fit(X)
+
+y_pred = kmeans.predict(X)
+y_pred = y_pred.astype(str)
+
+sil_score = silhouette_score(X, y_pred)
+print("Silhouette Score:", sil_score)
+
+
+
+
+df = (pd.DataFrame(np.array(noisysteel + noisybrass))).dropna(axis=1)
+df['label'] = ''
+df.loc[len(noisysteel), 'label'] = '0'
+df.loc[len(noisybrass), 'label'] = '1'
+df['label'] = df['label'].astype(int)
+X_train, X_test, y_train, y_test = train_test_split(df.drop('label', axis=1), df['label'], test_size=0.2, random_state=0)
+clf = SVC(kernel='linear')
+clf.fit(X_train, y_train)
+y_pred = clf.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy:", accuracy)
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy:", accuracy)
