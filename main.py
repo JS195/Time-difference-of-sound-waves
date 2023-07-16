@@ -52,40 +52,42 @@ magnesium = deltat(cp1, cs2, cp2)
 
 
 
-tic = time.perf_counter()
-SVC_accuracy_scores = []
-scaler = MinMaxScaler()
-for E in range (250):
-    noisysteel = multiplicative_noise(steel,E)
-    noisybrass = multiplicative_noise(brass,E)
-    noisyconcrete = multiplicative_noise(concrete,E)
-    noisylead = multiplicative_noise(lead,E)
-    noisyaluminium = multiplicative_noise(aluminium,E)
-    noisycopper = multiplicative_noise(copper,E)
-    noisymagnesium = multiplicative_noise(magnesium,E)
-    df = (pd.DataFrame(np.array(noisysteel + noisybrass + noisyconcrete + noisylead + noisyaluminium + noisycopper + noisymagnesium))).dropna(axis=1)
-    df['label'] = ''
-    df.loc[:len(noisysteel)-1, 'label'] = '0'
-    df.loc[len(noisysteel):len(noisysteel) + len(noisybrass) - 1, 'label'] = '1'
-    df.loc[len(noisysteel) + len(noisybrass):len(noisysteel) + len(noisybrass) + len(noisyconcrete) - 1, 'label'] = '2'
-    df.loc[len(noisysteel) + len(noisybrass) + len(noisyconcrete):len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead) - 1, 'label'] = '3'
-    df.loc[len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead):len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead) + len(noisyaluminium) - 1, 'label'] = '4'
-    df.loc[len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead) + len(noisyaluminium):len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead) + len(noisyaluminium) + len(noisycopper) - 1, 'label'] = '5'
-    df.loc[len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead) + len(noisyaluminium) + len(noisycopper):, 'label'] = '6'
-    df['label'] = df['label'].astype(int)
-    X_train, X_test, y_train, y_test = train_test_split(df.drop('label', axis=1), df['label'], test_size=0.2, random_state=0)
-    scaler.fit(X_train)
-    X_train = scaler.transform(X_train)
-    X_test = scaler.transform(X_test)
+def calculate_SVC_accuracy_scores(steel, brass, concrete, lead, aluminium, copper, magnesium, E_range):
+    SVC_accuracy_scores = []
+    scaler = MinMaxScaler()
 
-    clf = SVC(kernel='rbf')
-    clf.fit(X_train, y_train)
-    y_pred = clf.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    SVC_accuracy_scores.append(accuracy)
-toc = time.perf_counter()
-timings = toc-tic
-print(timings)
+    for E in E_range:
+        noisysteel = multiplicative_noise(steel, E)
+        noisybrass = multiplicative_noise(brass, E)
+        noisyconcrete = multiplicative_noise(concrete, E)
+        noisylead = multiplicative_noise(lead, E)
+        noisyaluminium = multiplicative_noise(aluminium, E)
+        noisycopper = multiplicative_noise(copper, E)
+        noisymagnesium = multiplicative_noise(magnesium, E)
+        df = (pd.DataFrame(np.array(noisysteel + noisybrass + noisyconcrete + noisylead + noisyaluminium + noisycopper + noisymagnesium))).dropna(axis=1)
+        df['label'] = ''
+        df.loc[:len(noisysteel)-1, 'label'] = '0'
+        df.loc[len(noisysteel):len(noisysteel) + len(noisybrass) - 1, 'label'] = '1'
+        df.loc[len(noisysteel) + len(noisybrass):len(noisysteel) + len(noisybrass) + len(noisyconcrete) - 1, 'label'] = '2'
+        df.loc[len(noisysteel) + len(noisybrass) + len(noisyconcrete):len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead) - 1, 'label'] = '3'
+        df.loc[len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead):len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead) + len(noisyaluminium) - 1, 'label'] = '4'
+        df.loc[len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead) + len(noisyaluminium):len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead) + len(noisyaluminium) + len(noisycopper) - 1, 'label'] = '5'
+        df.loc[len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead) + len(noisyaluminium) + len(noisycopper):, 'label'] = '6'
+        df['label'] = df['label'].astype(int)
+        X_train, X_test, y_train, y_test = train_test_split(df.drop('label', axis=1), df['label'], test_size=0.2, random_state=0)
+        scaler.fit(X_train)
+        X_train = scaler.transform(X_train)
+        X_test = scaler.transform(X_test)
+
+        clf = SVC(kernel='rbf')
+        clf.fit(X_train, y_train)
+        y_pred = clf.predict(X_test)
+        accuracy = accuracy_score(y_test, y_pred)
+        SVC_accuracy_scores.append(accuracy)
+
+    return SVC_accuracy_scores
+
+
 
 axis1 = np.linspace(0.0000001, 0.000025, 250)
 
