@@ -1,94 +1,96 @@
-import numpy as np
-import matplotlib.pyplot as plt
+from Functions import *
+import time
 import pandas as pd
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-
-def deltat(cp1, cs2, cp2):
-    d = 100000
-    theta_p1 = np.linspace(0, np.pi/2, num=100)
-    g2 = cp2/cp1
-    g1 = cs2/cp1
-    delta_t1 = np.array([(d/cp1)*(np.cos(theta) + 1/np.sqrt(1-g1**2*np.sin(theta)**2)*(g1*np.sin(theta)**2-1/g1)) for theta in theta_p1]) 
-    delta_t2 = np.array([(d/cp1)*(np.cos(theta) + 1/np.sqrt(1-g2**2*np.sin(theta)**2)*(g2*np.sin(theta)**2-1/g2)) for theta in theta_p1])
-    delta_t3 = delta_t2-delta_t1
-    return(delta_t3)
-
-def plotter(delta_t3):
-    theta_p1 = np.linspace(0, np.pi/2, num=100)
-    plt.plot(theta_p1, delta_t3,'r')
-    plt.xlabel('theta_p1 (rad)')
-    plt.ylabel('Time (s)')
-    plt.title('Difference in time between longitudinal and shear waves reaching the reciever for a variety of angles')
-    plt.show()
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
 
 # Values found from https://www.engineeringtoolbox.com/sound-speed-solids-d_713.html
 #Steel
-steel_cp1 = 1500
-steel_cs2 = 3150
-steel_cp2 = 5800
-steel = deltat(steel_cp1, steel_cs2, steel_cp2)
+cp1 = 1500
+cs2 = 3150
+cp2 = 5800
+steel = deltat(cp1, cs2, cp2)
 #plotter(steel)
 
 #Brass: 
-brass_cp1 = 1500
-brass_cs2 = 2110
-brass_cp2 = 4700
-brass = deltat(brass_cp1, brass_cs2, brass_cp2)
-#plotter(brass)
+cp1 = 1500
+cs2 = 2110
+cp2 = 4700
+brass = deltat(cp1, cs2, cp2)
 
 #Concrete
-concrete_cp1 = 1500
-concrete_cs2 = 3200
-concrete_cp2 = 3700
-concrete = deltat(concrete_cp1, concrete_cs2, concrete_cp2)
-#plotter(concrete)
+cp1 = 1500
+cs2 = 3200
+cp2 = 3700
+concrete = deltat(cp1, cs2, cp2)
 
 # Lead (rolled)
-lead_cp1 = 1500
-lead_cs2 = 690
-lead_cp2 = 1960
-lead = deltat(lead_cp1, lead_cs2, lead_cp2)
-#plotter(lead)
+cp1 = 1500
+cs2 = 690
+cp2 = 1960
+lead = deltat(cp1, cs2, cp2)
 
-def noise(delta_t1):
-    E = 1
-    datasets = []
-    for i in range(5):
-        noise = np.random.normal(0, 1, len(delta_t1)) * E
-        delta_t1_noisy = delta_t1 + noise
-        datasets.append(delta_t1_noisy)
-    return datasets
+# Aluminium 
+cp1 = 1500
+cs2 = 3040
+cp2 = 6420
+aluminium = deltat(cp1, cs2, cp2)
 
-def plot_datasets(datasets):
-    for i, dataset in enumerate(datasets):
-        plt.plot(dataset, label=f'dataset {i + 1}')
-    plt.legend()
-    plt.show()
+# Copper (rolled)
+cp1 = 1500
+cs2 = 2270
+cp2 = 5010
+copper = deltat(cp1, cs2, cp2)
 
-noisysteel = noise(steel)
-noisybrass = noise(brass)
-noisyconcrete = noise(concrete)
-noisylead = noise(lead)
+# Magnesium (rolled)
+cp1 = 15001
+cs2 = 3050
+cp2 = 5570
+magnesium = deltat(cp1, cs2, cp2)
 
-#plot_datasets(noisysteel)
-#plot_datasets(noisybrass)
-#plot_datasets(noisyconcrete)
-#plot_datasets(noisylead)
 
-df = (pd.DataFrame(np.array(noisysteel+noisybrass+noisyconcrete+noisylead))).dropna(axis=1)
 
-scaled_df = StandardScaler().fit_transform(df)
+tic = time.perf_counter()
+SVC_accuracy_scores = []
+scaler = MinMaxScaler()
+for E in range (250):
+    noisysteel = multiplicative_noise(steel,E)
+    noisybrass = multiplicative_noise(brass,E)
+    noisyconcrete = multiplicative_noise(concrete,E)
+    noisylead = multiplicative_noise(lead,E)
+    noisyaluminium = multiplicative_noise(aluminium,E)
+    noisycopper = multiplicative_noise(copper,E)
+    noisymagnesium = multiplicative_noise(magnesium,E)
+    df = (pd.DataFrame(np.array(noisysteel + noisybrass + noisyconcrete + noisylead + noisyaluminium + noisycopper + noisymagnesium))).dropna(axis=1)
+    df['label'] = ''
+    df.loc[:len(noisysteel)-1, 'label'] = '0'
+    df.loc[len(noisysteel):len(noisysteel) + len(noisybrass) - 1, 'label'] = '1'
+    df.loc[len(noisysteel) + len(noisybrass):len(noisysteel) + len(noisybrass) + len(noisyconcrete) - 1, 'label'] = '2'
+    df.loc[len(noisysteel) + len(noisybrass) + len(noisyconcrete):len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead) - 1, 'label'] = '3'
+    df.loc[len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead):len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead) + len(noisyaluminium) - 1, 'label'] = '4'
+    df.loc[len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead) + len(noisyaluminium):len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead) + len(noisyaluminium) + len(noisycopper) - 1, 'label'] = '5'
+    df.loc[len(noisysteel) + len(noisybrass) + len(noisyconcrete) + len(noisylead) + len(noisyaluminium) + len(noisycopper):, 'label'] = '6'
+    df['label'] = df['label'].astype(int)
+    X_train, X_test, y_train, y_test = train_test_split(df.drop('label', axis=1), df['label'], test_size=0.2, random_state=0)
+    scaler.fit(X_train)
+    X_train = scaler.transform(X_train)
+    X_test = scaler.transform(X_test)
 
-def Kmeans_method(filename,num_components):
-    new_cluster = np.array(filename)
-    kmeans = KMeans(n_clusters= num_components, random_state=0)
-    label = kmeans.fit_predict(new_cluster)
-    centroids = kmeans.cluster_centers_
-    for i in range(0,4):
-        plt.scatter(new_cluster[label == i , 0] ,new_cluster[label == i , 1], label = i, s = 10)
-        plt.scatter(centroids[:,0] , centroids[:,1] , s = 30, color = 'k', marker="x")
-        plt.legend()
-    return label
+    clf = SVC(kernel='rbf')
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    SVC_accuracy_scores.append(accuracy)
+toc = time.perf_counter()
+timings = toc-tic
+print(timings)
 
-Kmeans_method(scaled_df,4)
+axis1 = np.linspace(0.0000001, 0.000025, 250)
+
+plt.plot(axis1, SVC_accuracy_scores)
+plt.xlabel('E value')
+plt.ylabel('Accuracy')
+plt.title('Accuracy of a SVM for increasing values of E')
+plt.show()
