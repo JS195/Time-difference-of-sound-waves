@@ -6,6 +6,9 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 def deltat(cp1, cs2, cp2):
     d = 0.1
@@ -77,3 +80,54 @@ def calculate_SVC_accuracy(df):
     SVC_accuracy_scores.append(accuracy)
 
     return SVC_accuracy_scores
+
+def calculate_KNN_accuracy(df):
+    knn_accuracy_scores = []
+    scaler = MinMaxScaler()
+
+    X_train, X_test, y_train, y_test = train_test_split(df.drop('label', axis=1), df['label'], test_size=0.2, random_state=0)
+    scaler.fit(X_train)
+    X_train = scaler.transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    clf = KNeighborsClassifier(n_neighbors=5)
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    knn_accuracy_scores.append(accuracy)
+
+    return knn_accuracy_scores
+
+def calculate_gradient_accuracy(df):
+    grad_accuracy_scores = []
+    scaler = MinMaxScaler()
+
+    X_train, X_test, y_train, y_test = train_test_split(df.drop('label', axis=1), df['label'], test_size=0.2, random_state=0)
+    scaler.fit(X_train)
+    X_train = scaler.transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    clf = GradientBoostingClassifier()
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    grad_accuracy_scores.append(accuracy)
+
+    return grad_accuracy_scores
+
+def randomForest(df):
+    rf_accuracy = []
+    scaler = MinMaxScaler()
+
+    X_train, X_test, y_train, y_test = train_test_split(df.drop('label', axis=1), df['label'], test_size=0.2, random_state=0)
+    scaler.fit(X_train)
+    X_train = scaler.transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    clf = RandomForestClassifier(n_estimators=100)
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    rf_accuracy.append(accuracy)
+
+    return rf_accuracy
